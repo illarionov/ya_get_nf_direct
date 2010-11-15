@@ -1,0 +1,62 @@
+ya_get_nf_direct - еще один вариант утилиты выдирания детальной статистики UTM.
+Cовместима по параметрам с имеющимя в UTM get_nf_direct'ом. Основные улучшения:
+
+    * Прозрачная распаковка gz/bzip2/lzma/xz архивов
+    * Возможность экспорт результатов в SQlite3 базу данных.
+    * Расширенные правила фильтрации с использованием полей БД, операторов =,!=,<,>, скобок и логических операторов И/ИЛИ/НЕ
+    * Возможность чтения данных с stdin (для этого и переписывалось).
+    * В качестве времени (-from, -to) можно указывать время в формате ГГГГ-ММ-ДД[TЧЧ:ММ:СС]
+    * По SIGINFO/SIGUSR1 показывает текущий статус
+    * Open source
+
+Обсуждение здесь: http://www.netup.ru/phpbb/viewtopic.php?t=8155
+
+$ ./ya_get_nf_direct --help
+ya_get_nf_direct - UTM ya_get_nf_direct module.
+$Revision: 0.1, 23-sep-2010 $
+Usage: ya_get_nf_direct [-h] [options]
+Options:
+    -D, --directory             Directory, default: /netup/utm5/db/
+    -b, --database              Database name, (- - stdin), default: /netup/utm5/db/iptraffic_raw.dbs
+    -a, --account_id            Account ID, default: none
+    -s, --src_ip=<addr>[/mask]  Source Address, default: none
+    -d, --dst_ip=<addr>[/mask]  Destination Address, default: none
+    -p, --src_port              Source port, default: none
+    -P, --dst_port              Destination port, default: none
+    -c, --tclass                Traffic class, default: none
+    -f, --from=timestamp        From timestamp/datetime, default: 0
+    -t, --to=timestamp          To timestamp/datetime, default: current timestamp
+    -l, --limit                 Max count of rows, default: unlim
+    -e, --extended              Print stats in extended format
+    -F, --filter=<filter>       Apply extended filter
+    -S, --sqlite=<db>           Dump to Sqlite database db
+    -h, --help                  Help
+    -v, --version               Show version
+
+Extended filters:
+    Logical operators:                  ||, &&, !, ()
+    Comprarsion operators:              ==, !=, >, >=, <, <=
+    Supported expressions:
+        fw_id      [==]    addr[/mask]  Netup Firewall ID
+        src_addr   [==]    addr[/mask]  Source IP/Network
+        dst_addr   [==]    addr[/mask]  Destination IP/Network
+        next_hop   [==]    addr[/mask]  Next Hop IP/Network
+        i_ifx      [compr] num          Source interface index
+        o_ifx      [compr] num          Destination interface index
+        packets    [compr] num          Number of packets in a flow
+        octets     [compr] num          Number of octets in a flow
+        s_port     [compr] num          Source port
+        d_port     [compr] num          Destination port
+        flags      [==]    num          TCP flags
+        prot       [compr] num          IP Protocol
+        tos        [compr] num          IP TOS
+        src_as     [compr] num          Source AS
+        dst_as     [compr] num          Destination AS
+        slink_id   [compr] num          UTM service link ID
+        account_id [compr] num          UTM account ID
+        account_ip [==]    addr[/mask]  UTM accounted IP
+        tclass     [compr] num          UTM traffic class
+        timestamp  [compr] num|datetime UTM timestamp
+        router_ip  [==]    addr[/mask]  Netflow Router IP
+
+Example: '(timestamp >= 2010-01-01T12:00 && src_addr 192.168.1.0/24) || (dst_addr 192.168.2.0/24 && ! account_id 5)' 
