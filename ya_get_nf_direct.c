@@ -53,7 +53,7 @@
 #define OPEN_ARCHIVE_BLOCK_SIZE  (16*1024*1024)
 
 const char *progname = "ya_get_nf_direct";
-const char *revision = "$Revision: 0.1, 23-sep-2010 $";
+const char *revision = "$Revision: 0.2, 05-nov-2012 $";
 
 static volatile sig_atomic_t info;
 
@@ -150,8 +150,8 @@ static void help(void)
    "    -p, --src_port              Source port, default: none\n"
    "    -P, --dst_port              Destination port, default: none\n"
    "    -c, --tclass                Traffic class, default: none\n"
-   "    -f, --from=timestamp        From timestamp/datetime, default: 0\n"
-   "    -t, --to=timestamp          To timestamp/datetime, default: current timestamp\n"
+   "    -f, --from=timestamp        From timestamp/datetime, default: 0. Format: %%Y-%%m-%%dT%%H:%%M:%%S\n"
+   "    -t, --to=timestamp          To timestamp/datetime, default: current timestamp. Format: %%Y-%%m-%%dT%%H:%%M:%%S\n"
    "    -l, --limit                 Max count of rows, default: unlim\n"
    "    -e, --extended              Print stats in extended format\n"
    "    -F, --filter=<filter>       Apply extended filter\n"
@@ -274,8 +274,7 @@ static int process_dir(struct ctx_t *ctx, const char *dirname)
 	 continue;
 
       fprintf(stderr, "file %s\n", namelist[i]->d_name);
-      asprintf(&fname, "%s/%s", dirname, namelist[i]->d_name);
-      if (!fname) {
+      if (asprintf(&fname, "%s/%s", dirname, namelist[i]->d_name) < 0) {
 	 fprintf(stderr, "asprintf() error on `%s` file\n", namelist[i]->d_name);
 	 continue;
       }
@@ -622,9 +621,14 @@ time_t get_timestamp(const char *time_str)
       return (time_t)-1;
 
    if (endptr[0] == 'T') {
-      endptr = strptime(endptr, "T%T", tm);
-      if (!endptr || (endptr[0] != '\0'))
-	 return (time_t)-1;
+      const char *hhmmss = endptr;
+      endptr = strptime(hhmmss, "T%T", tm);
+      if (!endptr || (endptr[0] != '\0')) {
+	 endptr = strptime(hhmmss, "T%R", tm);
+	 if (!endptr || (endptr[0] != '\0')) {
+	    return (time_t)-1;
+	 }
+      }
    }
 
    return mktime(tm);
@@ -688,6 +692,17 @@ inline static void print_rec(struct ctx_t *ctx, const struct record_t *rec)
 	 }
 	 insert_sqlite_nf(ctx->opts.sqlite_ctx, rec, &addrs);
       }
+   }
+
+   if (ctx->rows_printed == 0) {
+      /* Print header */
+      if (ctx->opts.extended)
+	 fprintf(stream, "timestamp account_id source destination t_class packets bytes sport "
+	       "dport nexthop iface oface tcp_flags proto tos src_as dst_as src_mask"
+	       "dst_mask router_ip_from date\n"
+	       );
+      else
+	 fprintf(stream, "timestamp account_id source destination t_class packets bytes sport dport date\n");
    }
 
    if (ctx->opts.extended) {
@@ -913,7 +928,7 @@ int main(int argc, char *argv[])
 	 case 'f':
 	    tmp_timestamp = get_timestamp(optarg);
 	    if (tmp_timestamp < 0) {
-	       fprintf(stderr, "Wrong %s timestamp/datetime `%s`\n", "start", optarg);
+	       fprintf(stderr, "Wrong %s timestamp/datetime `%s`. Required format: %%Y-%%m-%%dT%%H:%%M:%%S. \n", "start", optarg);
 	       goto main_error;
 	    }
 
@@ -922,7 +937,7 @@ int main(int argc, char *argv[])
 	 case 't':
 	    tmp_timestamp = get_timestamp(optarg);
 	    if (tmp_timestamp < 0) {
-	       fprintf(stderr, "Wrong %s timestamp/datetime `%s`\n", "end", optarg);
+	       fprintf(stderr, "Wrong %s timestamp/datetime `%s`\n. Required format: %%Y-%%m-%%dT%%H:%%M:%%S.", "end", optarg);
 	       goto main_error;
 	    }
 
@@ -952,6 +967,11 @@ int main(int argc, char *argv[])
    if (ctx->opts.from > ctx->opts.to) {
       fprintf(stderr, "Start timestamp greater then end timestamp.");
       goto main_error;
+   }else {
+      fprintf(stderr, "Time period (timestamps): %lu - %lu\n",
+	    (unsigned long)ctx->opts.from,
+	    (unsigned long)ctx->opts.to
+	    );
    }
 
    ctx->done=0;

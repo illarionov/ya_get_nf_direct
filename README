@@ -1,4 +1,7 @@
-ya_get_nf_direct - еще один вариант утилиты выдирания детальной статистики UTM.
+Ya_get_nf_direct
+==============
+
+Еще один вариант утилиты выдирания детальной статистики UTM.
 Cовместима по параметрам с имеющимя в UTM get_nf_direct'ом. Основные улучшения:
 
     * Прозрачная распаковка gz/bzip2/lzma/xz архивов
@@ -11,9 +14,27 @@ Cовместима по параметрам с имеющимя в UTM get_nf_
 
 Обсуждение здесь: http://www.netup.ru/phpbb/viewtopic.php?t=8155
 
+Установка
+==========
+
+Для сборки требуются libarchive и sqlite3.
+
+   $ sudo apt-get install libarchive-dev libsqlite3-dev
+
+   $ git clone git@github.com:littlesavage/ya_get_nf_direct.git
+   $ cd ya_get_nf_direct
+   $ make
+   $ su
+   # make install
+
+Программа будет установлена в /netup/utm5/bin/ya_get_nf_direct
+
+Использование
+==============
+
 $ ./ya_get_nf_direct --help
 ya_get_nf_direct - UTM ya_get_nf_direct module.
-$Revision: 0.1, 23-sep-2010 $
+$Revision: 0.2, 05-nov-2012 $
 Usage: ya_get_nf_direct [-h] [options]
 Options:
     -D, --directory             Directory, default: /netup/utm5/db/
@@ -24,7 +45,7 @@ Options:
     -p, --src_port              Source port, default: none
     -P, --dst_port              Destination port, default: none
     -c, --tclass                Traffic class, default: none
-    -f, --from=timestamp        From timestamp/datetime, default: 0
+    -f, --from=timestamp        From timestamp/datetime, default: 0.  Format: %Y-%m-%dT%H:%M:%S
     -t, --to=timestamp          To timestamp/datetime, default: current timestamp
     -l, --limit                 Max count of rows, default: unlim
     -e, --extended              Print stats in extended format
@@ -60,3 +81,8 @@ Extended filters:
         router_ip  [==]    addr[/mask]  Netflow Router IP
 
 Example: '(timestamp >= 2010-01-01T12:00 && src_addr 192.168.1.0/24) || (dst_addr 192.168.2.0/24 && ! account_id 5)' 
+
+Даты --from, --to, и в фильтрах задаются в формате ГГГГ-ММ-ДДTЧЧ:ММ:СС, либо
+unix timestamp.
+Вмегда указывайте ограничения по датам (--from, --to), по ним выбираются файлы для распаковки.
+

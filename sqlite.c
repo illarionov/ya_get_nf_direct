@@ -98,7 +98,7 @@ struct sqlite_nf_ctx *new_sqlite_nf(const char *fname, char *err, size_t err_msg
    r = sqlite3_open(fname, &res->db);
    if (r != SQLITE_OK) {
       if (err)
-	    snprintf(err, err_msg_size,
+	    snprintf(err, err_msg_size, "%s",
 		  res->db ? sqlite3_errmsg(res->db) : "malloc error");
       goto sqlite_nf_new_error;
    }

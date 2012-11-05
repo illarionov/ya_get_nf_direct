@@ -22,11 +22,11 @@ filter.yy.c: filter.l
 	flex -i -B -ofilter.yy.c filter.l
 
 ya_get_nf_direct: ya_get_nf_direct.c ya_get_nf_direct.h filter.yy.c filter.l sqlite.c
-	$(CC) $(CFLAGS) $(LDFLAGS) \
+	$(CC) $(CFLAGS) \
 	sqlite.c \
 	ya_get_nf_direct.c \
 	filter.yy.c \
-	-o ya_get_nf_direct
+	-o ya_get_nf_direct $(LDFLAGS)
 
 install:
 	mkdir -p ${DESTDIR}/bin 2> /dev/null
