@@ -342,7 +342,7 @@ static int process_file(struct ctx_t *ctx, const char *fname)
 	 }
 
 	 archive_read_support_format_all(archive);
-	 archive_read_support_compression_all(archive);
+	 archive_read_support_filter_all(archive);
 
 	 archive_read_support_format_raw(archive);
 
@@ -481,7 +481,7 @@ static int process_file(struct ctx_t *ctx, const char *fname)
 
 read_error:
    if (is_archive) {
-      archive_read_finish(archive);
+      archive_read_free(archive);
    }else {
       if (fname && (fd > 0))
 	 close(fd);
